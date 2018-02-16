@@ -2079,7 +2079,7 @@ const PageLoadPanel = `{
   "valueName": "current"
 }`
 
-const Procstat = `{
+const ProcstatPanel = `{
     "cacheTimeout":null,
     "colorBackground":true,
     "colorValue":false,
