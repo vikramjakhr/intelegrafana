@@ -2190,3 +2190,74 @@ const ProcstatPanel = `{
     ],
     "valueName":"current"
 }`
+
+const TelegrafConfig = `[global_tags]
+  dc = "ap-south-1" # will tag all metrics with dc=us-east-1
+  host  = "$HOSTNAME"
+
+[agent]
+  interval = "1m"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "30s"
+  flush_jitter = "0s"
+  precision = ""
+  logfile = "/var/log/telegraf/telegraf.log"
+  hostname = ""
+  omit_hostname = false
+
+###############################################################################
+#                            OUTPUT PLUGINS                                   #
+###############################################################################
+
+[[outputs.influxdb]]
+  urls = ["$INFLUX_URL$:$INFLUX_PORT$"] # required
+  database = "$DATASOURCE_NAME$" # required
+  retention_policy = ""
+  write_consistency = "any"
+  timeout = "5s"
+  content_encoding = "gzip"
+
+###############################################################################
+#                            INPUT PLUGINS                                    #
+###############################################################################
+
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
+
+[[inputs.disk]]
+  mount_points = ["/","/data"]
+  fielddrop=["used","inodes_used"]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs"]
+
+[[inputs.mem]]
+  fielddrop=["active","buffered","cached","free","inactive","used","used_percent"]
+
+[[inputs.processes]]
+  # no configuration
+
+[[inputs.swap]]
+  fielddrop=["free","total"]
+
+[[inputs.system]]
+  fielddrop=["n_users","uptime_format"]`
+
+const TelegrafInputNetResponse = `[[inputs.net_response]]
+  protocol = "tcp"
+  address = ":$PORT$"
+  timeout = "5s"
+  read_timeout = "5s"`
+
+const TelegrafInputHttpResponse = `[[inputs.http_response]]
+  address = "$URL$"
+  response_timeout = "30s"
+  method = "GET"
+  # follow_redirects = false`
+
+const TelegrafInputProcstat = `[[inputs.procstat]]
+  pattern = "$PROCESS$"
+  fielddrop = ["cpu_*", "involuntary_context_switches", "memory_*", "num_threads", "voluntary_context_switches"]`

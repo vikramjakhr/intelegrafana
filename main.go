@@ -11,6 +11,8 @@ import (
 
 type CliArgs struct {
 	GrafanaURL  *string
+	InfluxURL   *string
+	InfluxPort  *string
 	GrafanaPort *string
 	OrgId       *string
 	ApiKey      *string
@@ -26,13 +28,17 @@ type GrafanaArgs struct {
 
 var DashboardInfo *GrafanaArgs = &GrafanaArgs{}
 var Args CliArgs = CliArgs{}
+var AgentConfig string
 
 func main() {
 	fmt.Println("Starting intelegrafana.")
 	//parseFlags()
 	parseInputs()
+	initAgentConfig()
 	createDashboard()
 	fmt.Println(*DashboardInfo)
+	fmt.Println("=============================")
+	fmt.Println(AgentConfig)
 	fmt.Println("Finished execution. Exiting intelegrafana now...")
 	fmt.Println("Bye!!!")
 }
@@ -45,22 +51,32 @@ func parseInputs() {
 	process()
 }
 
+func initAgentConfig() {
+	AgentConfig = TelegrafConfig
+	AgentConfig = strings.Replace(AgentConfig, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+	//AgentConfig = strings.Replace(AgentConfig, "$INFLUX_URL$", *Args.InfluxURL, -1)
+	//AgentConfig = strings.Replace(AgentConfig, "$INFLUX_PORT$", *Args.InfluxPort, -1)
+}
+
 func parseFlags() {
 	fmt.Println("Parsing command line arguments.")
 	args := CliArgs{}
 	args.GrafanaURL = flag.String("grafanaURL", "", "grafana endpoint")
 	args.GrafanaPort = flag.String("grafanaPort", "", "grafana port")
+	args.InfluxURL = flag.String("influxURL", "", "grafana endpoint")
+	args.InfluxPort = flag.String("influxPort", "8086", "grafana port")
 	args.OrgId = flag.String("orgId", "", "Dashboard organization ID")
 	args.ApiKey = flag.String("apiKey", "", "Organization API Key")
 	flag.Parse()
 	fmt.Println(fmt.Sprintf("No of command line arguments that have been set: %d", flag.NFlag()))
-	if flag.NFlag() < 4 ||
+	if flag.NFlag() < 5 ||
 		strings.Trim(*args.GrafanaURL, " ") == "" ||
 		strings.Trim(*args.GrafanaPort, " ") == "" ||
+		strings.Trim(*args.InfluxURL, " ") == "" ||
 		strings.Trim(*args.OrgId, " ") == "" ||
 		strings.Trim(*args.ApiKey, " ") == "" {
 		fmt.Println("Invalid statup agruments...")
-		fmt.Println("Usage: ./intelegrafana -grafanUrl=<URL> -grafanaPort=<port> orgId=<orgid> -apiKey=<apikey>")
+		fmt.Println("Usage: ./intelegrafana -grafanUrl=<URL> -grafanaPort=<port> -influxUrl=<URL> -influxPort=<port> orgId=<orgid> -apiKey=<apikey>")
 		fmt.Println("Exiting now...")
 		fmt.Println("Bye!!!")
 		os.Exit(1)
@@ -192,27 +208,27 @@ func createDashboard() {
 	djson = strings.Replace(djson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	row := createURLRow()
 	if row != nil {
-		rows = append(rows, createURLRow())
+		rows = append(rows, row)
 	}
 	row = createPortsRow()
 	if row != nil {
-		rows = append(rows, createPortsRow())
+		rows = append(rows, row)
 	}
 	row = createProcstatRow()
 	if row != nil {
-		rows = append(rows, createProcstatRow())
+		rows = append(rows, row)
 	}
 	row = createDiskProcessSwapRow()
 	if row != nil {
-		rows = append(rows, createDiskProcessSwapRow())
+		rows = append(rows, row)
 	}
 	row = createCPURAMRow()
 	if row != nil {
-		rows = append(rows, createCPURAMRow())
+		rows = append(rows, row)
 	}
 	row = createIPSystemLoadRow()
 	if row != nil {
-		rows = append(rows, createIPSystemLoadRow())
+		rows = append(rows, row)
 	}
 	json.Unmarshal([]byte(djson), &dashboard)
 	dashboard["rows"] = rows
@@ -238,6 +254,9 @@ func createURLRow() map[string]interface{} {
 			panel = make(map[string]interface{})
 			json.Unmarshal([]byte(paneljson), &panel)
 			panels = append(panels, panel)
+
+			tConf := strings.Replace(TelegrafInputHttpResponse, "$URL$", p, -1)
+			AgentConfig += "\n\n" + tConf
 		}
 		row := newRow(URL)
 		row["panels"] = panels
@@ -257,6 +276,9 @@ func createPortsRow() map[string]interface{} {
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
 			panels = append(panels, panel)
+
+			tConf := strings.Replace(TelegrafInputNetResponse, "$PORT$", p, -1)
+			AgentConfig += "\n\n" + tConf
 		}
 		row := newRow(PORTS)
 		row["panels"] = panels
@@ -276,6 +298,9 @@ func createProcstatRow() map[string]interface{} {
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
 			panels = append(panels, panel)
+
+			tConf := strings.Replace(TelegrafInputProcstat, "$PROCESS$", p, -1)
+			AgentConfig += "\n\n" + tConf
 		}
 		row := newRow(PROCSTATS)
 		row["panels"] = panels
