@@ -29,14 +29,18 @@ var Args CliArgs = CliArgs{}
 func main() {
 	fmt.Println("Starting intelegrafana.")
 	//parseFlags()
+	parseInputs()
+	fmt.Println(*DashboardInfo)
+	fmt.Println("Finished execution. Exiting intelegrafana now...")
+	fmt.Println("Bye!!!")
+}
+
+func parseInputs() {
 	dashboardName()
 	datasourceName()
 	ports()
 	urls()
 	process()
-	fmt.Println(*DashboardInfo)
-	fmt.Println("Finished execution. Exiting intelegrafana now...")
-	fmt.Println("Bye!!!")
 }
 
 func parseFlags() {
