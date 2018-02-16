@@ -22,7 +22,16 @@ const DashboardJson = `{
         "hideControls":false,
         "id":null,
         "links":[
+            {
+                "asDropdown":true,
+                "icon":"external link",
+                "includeVars":false,
+                "tags":[
 
+                ],
+                "title":"Dashboards",
+                "type":"dashboards"
+            }
         ],
         "refresh":"1m",
         "rows":[
@@ -2068,4 +2077,116 @@ const PageLoadPanel = `{
     }
   ],
   "valueName": "current"
+}`
+
+const Procstat = `{
+    "cacheTimeout":null,
+    "colorBackground":true,
+    "colorValue":false,
+    "colors":[
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+    ],
+    "datasource":"$DATASOURCE_NAME$",
+    "format":"none",
+    "gauge":{
+        "maxValue":100,
+        "minValue":0,
+        "show":false,
+        "thresholdLabels":false,
+        "thresholdMarkers":true
+    },
+    "interval":null,
+    "links":[
+
+    ],
+    "mappingType":2,
+    "mappingTypes":[
+        {
+            "name":"value to text",
+            "value":1
+        },
+        {
+            "name":"range to text",
+            "value":2
+        }
+    ],
+    "maxDataPoints":100,
+    "nullPointMode":"connected",
+    "nullText":null,
+    "postfix":"",
+    "postfixFontSize":"50%",
+    "prefix":"Process ($PROCESS$):",
+    "prefixFontSize":"30%",
+    "rangeMaps":[
+        {
+            "from":"2",
+            "text":"Running",
+            "to":"200000"
+        }
+    ],
+    "span":3,
+    "sparkline":{
+        "fillColor":"rgba(31, 118, 189, 0.18)",
+        "full":false,
+        "lineColor":"rgb(31, 120, 193)",
+        "show":false
+    },
+    "tableColumn":"",
+    "targets":[
+        {
+            "alias":"",
+            "dsType":"influxdb",
+            "groupBy":[
+
+            ],
+            "measurement":"procstat",
+            "orderByTime":"ASC",
+            "policy":"default",
+            "refId":"A",
+            "resultFormat":"time_series",
+            "select":[
+                [
+                    {
+                        "params":[
+                            "pid"
+                        ],
+                        "type":"field"
+                    },
+                    {
+                        "params":[
+
+                        ],
+                        "type":"last"
+                    }
+                ]
+            ],
+            "tags":[
+                {
+                    "key":"host",
+                    "operator":"=~",
+                    "value":"/^$host$/"
+                },
+                {
+                    "condition":"AND",
+                    "key":"pattern",
+                    "operator":"=",
+                    "value":"$PROCESS$"
+                }
+            ]
+        }
+    ],
+    "thresholds":"0,1",
+    "title":"Process ($PROCESS$)",
+    "type":"singlestat",
+    "valueFontSize":"30%",
+    "valueMaps":[
+        {
+            "op":"=",
+            "text":"0",
+            "value":"null"
+        }
+    ],
+    "valueName":"current"
 }`
