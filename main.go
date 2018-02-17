@@ -837,23 +837,23 @@ func installTelegraf(platform string) {
 		case CENTOS:
 			_, err := exec.Command("wget", "https://dl.influxdata.com/telegraf/releases/telegraf-1.5.2-1.x86_64.rpm", "-P", "/tmp").CombinedOutput()
 			if err != nil {
-				os.Stderr.WriteString(err.Error())
+				fmt.Println("Error while wget telegraf rpm", err)
 				ExitWithStatus1(err.Error())
 			}
-			_, err = exec.Command("sudo", "yum", "localinstall", "/tmp/telegraf-1.5.2-1.x86_64.rpm").CombinedOutput()
+			_, err = exec.Command("sudo", "yum", "localinstall", "/tmp/telegraf-1.5.2-1.x86_64.rpm","-y").CombinedOutput()
 			if err != nil {
-				os.Stderr.WriteString(err.Error())
+				fmt.Println("Error while localinstall telegraf rpm", err)
 				ExitWithStatus1(err.Error())
 			}
 			_, err = exec.Command("sudo", "rm", "-f", "/tmp/telegraf-1.5.2-1.x86_64.rpm").CombinedOutput()
 			if err != nil {
-				os.Stderr.WriteString(err.Error())
+				fmt.Println("Error while removing telegraf rpm", err)
 				ExitWithStatus1(err.Error())
 			}
 			replaceTelegrafBinary()
 			_, err = exec.Command("sudo", "chkconfig", "telegraf", "on").CombinedOutput()
 			if err != nil {
-				os.Stderr.WriteString(err.Error())
+				fmt.Println("Error while chkconfig on telegraf rpm", err)
 				ExitWithStatus1(err.Error())
 			}
 			break
