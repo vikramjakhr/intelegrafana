@@ -13,6 +13,8 @@ import (
 	"io"
 	"net/http"
 	"os/exec"
+	"strconv"
+	"math/rand"
 )
 
 type CliArgs struct {
@@ -37,15 +39,17 @@ var Args CliArgs = CliArgs{}
 var AgentConfig string
 
 func main() {
-	fmt.Println("Starting intelegrafana.")
-	//parseFlags()
-	/*parseInputs()
-	initAgentConfig()
-	createDashboard()
+	fmt.Println("Starting intelegrafana...")
+	parseFlags()
+	parseInputs()
+	fmt.Println("============================")
 	fmt.Println(*DashboardInfo)
-	fmt.Println("=============================")
-	fmt.Println(AgentConfig)*/
+	fmt.Println("============================")
 	installTelegraf(getOSName())
+	createDashboard()
+	initAgentConfig()
+	replaceTelegrafConfig()
+	restartTelegraf()
 	fmt.Println("Finished execution. Exiting intelegrafana now...")
 	fmt.Println("Bye!!!")
 }
@@ -61,16 +65,16 @@ func parseInputs() {
 func initAgentConfig() {
 	AgentConfig = TelegrafConfig
 	AgentConfig = strings.Replace(AgentConfig, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
-	//AgentConfig = strings.Replace(AgentConfig, "$INFLUX_URL$", *Args.InfluxURL, -1)
-	//AgentConfig = strings.Replace(AgentConfig, "$INFLUX_PORT$", *Args.InfluxPort, -1)
+	AgentConfig = strings.Replace(AgentConfig, "$INFLUX_URL$", *Args.InfluxURL, -1)
+	AgentConfig = strings.Replace(AgentConfig, "$INFLUX_PORT$", *Args.InfluxPort, -1)
 }
 
 func parseFlags() {
 	fmt.Println("Parsing command line arguments.")
 	args := CliArgs{}
-	args.GrafanaURL = flag.String("grafanaURL", "", "grafana endpoint")
+	args.GrafanaURL = flag.String("grafanaUrl", "", "grafana endpoint")
 	args.GrafanaPort = flag.String("grafanaPort", "", "grafana port")
-	args.InfluxURL = flag.String("influxURL", "", "grafana endpoint")
+	args.InfluxURL = flag.String("influxUrl", "", "grafana endpoint")
 	args.InfluxPort = flag.String("influxPort", "8086", "grafana port")
 	args.OrgId = flag.String("orgId", "", "Dashboard organization ID")
 	args.ApiKey = flag.String("apiKey", "", "Organization API Key")
@@ -88,6 +92,7 @@ func parseFlags() {
 		fmt.Println("Bye!!!")
 		os.Exit(1)
 	}
+	Args = args
 }
 
 func dashboardName() {
@@ -208,7 +213,7 @@ func checkExit(count, max int) {
 }
 
 func createDashboard() {
-	var dashboard map[string]interface{}
+	var payload map[string]map[string]interface{}
 	var rows []map[string]interface{}
 	var djson string = DashboardJson
 	djson = strings.Replace(djson, "$DASHBOARD_NAME$", DashboardInfo.DashboardName, -1)
@@ -237,18 +242,20 @@ func createDashboard() {
 	if row != nil {
 		rows = append(rows, row)
 	}
-	json.Unmarshal([]byte(djson), &dashboard)
+	json.Unmarshal([]byte(djson), &payload)
+	dashboard := payload["dashboard"]
 	dashboard["rows"] = rows
-	byts, err := json.MarshalIndent(dashboard, "", "   ")
+	// creating datasource
+	createDatasource()
+
+	// creating dashboard
+	byts, err := json.MarshalIndent(payload, "", "  ")
 	if err != nil {
 		fmt.Println("Error occurred while parsing dashboard json.")
 		fmt.Println(err)
 		ExitWithStatus1("Json parsing error")
 	}
-	fmt.Println(string(byts))
-	// creating datasource
-	createDatasource()
-	// creating dashboard
+	//fmt.Println(string(byts))
 	statusCode, resp, err := httpPost(fmt.Sprintf("%s/api/dashboards/db", *Args.GrafanaURL),
 		authHeader(*Args.ApiKey), nil, bytes.NewReader(byts))
 	if err != nil {
@@ -276,7 +283,19 @@ type GrafanaDatasource struct {
 }
 
 func createDatasource() {
-	ds := &GrafanaDatasource{}
+	orgId, err := strconv.Atoi(*Args.OrgId)
+	if err != nil {
+		ExitWithStatus1("Error while converting orgid")
+	}
+	ds := &GrafanaDatasource{
+		OrgId:    orgId,
+		Name:     DashboardInfo.DatasourceName,
+		Type:     "influxdb",
+		Access:   "proxy",
+		Database: DashboardInfo.DatasourceName,
+		Url:      fmt.Sprintf("%s:%s", *Args.InfluxURL, *Args.InfluxPort),
+
+	}
 	byts, err := json.Marshal(ds)
 	if err != nil {
 		ExitWithStatus1(fmt.Sprintf("Some error occured while creating grafana datasource."))
@@ -292,7 +311,7 @@ func createDatasource() {
 		ExitWithStatus1(fmt.Sprintf("Some error occured while creating grafana datasource."))
 	}
 	if statusCode == http.StatusOK || statusCode == http.StatusConflict {
-		fmt.Printf("Datasource with name %s created/exists. StatusCode: %s", DashboardInfo.DatasourceName, statusCode)
+		fmt.Printf("Datasource with name %s created/exists. StatusCode: %d", DashboardInfo.DatasourceName, statusCode)
 	} else {
 		msg := fmt.Sprintf("Some error occurred whie creating datasource with name %s.", DashboardInfo.DatasourceName)
 		ExitWithStatus1(msg)
@@ -312,17 +331,19 @@ func createURLRow() map[string]interface{} {
 		var panels []map[string]interface{}
 		for _, p := range urls {
 			var paneljson string = URLPanel
-			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 			paneljson = strings.Replace(paneljson, "$URL$", p, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
+			panel["id"] = rand.Intn(1000)
 			panels = append(panels, panel)
 
 			paneljson = PageLoadPanel
-			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 			paneljson = strings.Replace(paneljson, "$URL$", p, -1)
 			panel = make(map[string]interface{})
 			json.Unmarshal([]byte(paneljson), &panel)
+			panel["id"] = rand.Intn(1000)
 			panels = append(panels, panel)
 
 			tConf := strings.Replace(TelegrafInputHttpResponse, "$URL$", p, -1)
@@ -341,10 +362,11 @@ func createPortsRow() map[string]interface{} {
 		var panels []map[string]interface{}
 		for _, p := range ports {
 			var paneljson string = PortPanel
-			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 			paneljson = strings.Replace(paneljson, "$PORT$", p, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
+			panel["id"] = rand.Intn(1000)
 			panels = append(panels, panel)
 
 			tConf := strings.Replace(TelegrafInputNetResponse, "$PORT$", p, -1)
@@ -363,10 +385,11 @@ func createProcstatRow() map[string]interface{} {
 		var panels []map[string]interface{}
 		for _, p := range ports {
 			var paneljson string = ProcstatPanel
-			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 			paneljson = strings.Replace(paneljson, "$PROCESS$", p, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
+			panel["id"] = rand.Intn(1000)
 			panels = append(panels, panel)
 
 			tConf := strings.Replace(TelegrafInputProcstat, "$PROCESS$", p, -1)
@@ -382,21 +405,24 @@ func createProcstatRow() map[string]interface{} {
 func createDiskProcessSwapRow() map[string]interface{} {
 	var panels []map[string]interface{}
 	var paneljson string = DiskPanel
-	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
 	paneljson = ProcessPanel
-	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
 	paneljson = Swap
-	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
 	row := newRow(DISK_PROCESS_SWAP)
@@ -407,15 +433,17 @@ func createDiskProcessSwapRow() map[string]interface{} {
 func createCPURAMRow() map[string]interface{} {
 	var panels []map[string]interface{}
 	var paneljson string = CPUPanel
-	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
 	paneljson = RAMPanel
-	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
 	row := newRow(CPU_RAM)
@@ -426,15 +454,17 @@ func createCPURAMRow() map[string]interface{} {
 func createIPSystemLoadRow() map[string]interface{} {
 	var panels []map[string]interface{}
 	var paneljson string = IPTrafficPanel
-	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
 	paneljson = SystemLoadPanel
-	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DashboardName, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
 	row := newRow(IP_SYSTEMLOAD)
@@ -563,41 +593,80 @@ func getDistributionName() string {
 }
 
 func installTelegraf(platform string) {
-	fmt.Println(fmt.Sprintf("Installing telegraf for %s", platform))
-	switch platform {
-	case UBUNTU:
-		_, err := exec.Command("wget", "https://dl.influxdata.com/telegraf/releases/telegraf_1.5.2-1_amd64.deb", "-P", "/tmp").CombinedOutput()
-		if err != nil {
-			os.Stderr.WriteString(err.Error())
-			ExitWithStatus1(err.Error())
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Do you want to install telegraf [y/n]: ")
+	input, _ := reader.ReadString('\n')
+	input = strings.ToUpper(input)
+	isYesNo := string([]byte(input)[0])
+	if isYesNo == "Y" {
+		fmt.Println(fmt.Sprintf("Installing telegraf for %s", platform))
+		switch platform {
+		case UBUNTU:
+			_, err := exec.Command("wget", "https://dl.influxdata.com/telegraf/releases/telegraf_1.5.2-1_amd64.deb", "-P", "/tmp").CombinedOutput()
+			if err != nil {
+				os.Stderr.WriteString(err.Error())
+				ExitWithStatus1(err.Error())
+			}
+			_, err = exec.Command("sudo", "dpkg", "-i", "/tmp/telegraf_1.5.2-1_amd64.deb").CombinedOutput()
+			if err != nil {
+				os.Stderr.WriteString(err.Error())
+				ExitWithStatus1(err.Error())
+			}
+			_, err = exec.Command("sudo", "rm", "-f", "/tmp/telegraf_1.5.2-1_amd64.deb").CombinedOutput()
+			if err != nil {
+				os.Stderr.WriteString(err.Error())
+				ExitWithStatus1(err.Error())
+			}
+			replaceTelegrafBinary()
+			break
+		case CENTOS:
+			_, err := exec.Command("wget", "https://dl.influxdata.com/telegraf/releases/telegraf-1.5.2-1.x86_64.rpm", "-P", "/tmp").CombinedOutput()
+			if err != nil {
+				os.Stderr.WriteString(err.Error())
+				ExitWithStatus1(err.Error())
+			}
+			_, err = exec.Command("sudo", "yum", "localinstall", "/tmp/telegraf-1.5.2-1.x86_64.rpm").CombinedOutput()
+			if err != nil {
+				os.Stderr.WriteString(err.Error())
+				ExitWithStatus1(err.Error())
+			}
+			_, err = exec.Command("sudo", "rm", "-f", "/tmp/telegraf-1.5.2-1.x86_64.rpm").CombinedOutput()
+			if err != nil {
+				os.Stderr.WriteString(err.Error())
+				ExitWithStatus1(err.Error())
+			}
+			replaceTelegrafBinary()
+			_, err = exec.Command("sudo", "chkconfig", "telegraf", "on").CombinedOutput()
+			if err != nil {
+				os.Stderr.WriteString(err.Error())
+				ExitWithStatus1(err.Error())
+			}
+			break
 		}
-		_, err = exec.Command("sudo", "dpkg", "-i", "/tmp/telegraf_1.5.2-1_amd64.deb").CombinedOutput()
-		if err != nil {
-			os.Stderr.WriteString(err.Error())
-			ExitWithStatus1(err.Error())
-		}
-		_, err = exec.Command("sudo", "rm", "-f", "/tmp/telegraf_1.5.2-1_amd64.deb").CombinedOutput()
-		if err != nil {
-			os.Stderr.WriteString(err.Error())
-			ExitWithStatus1(err.Error())
-		}
-		break
-	case CENTOS:
-		_, err := exec.Command("wget", "https://dl.influxdata.com/telegraf/releases/telegraf-1.5.2-1.x86_64.rpm", "-P", "/tmp").CombinedOutput()
-		if err != nil {
-			os.Stderr.WriteString(err.Error())
-			ExitWithStatus1(err.Error())
-		}
-		_, err = exec.Command("sudo", "yum", "localinstall", "/tmp/telegraf-1.5.2-1.x86_64.rpm").CombinedOutput()
-		if err != nil {
-			os.Stderr.WriteString(err.Error())
-			ExitWithStatus1(err.Error())
-		}
-		_, err = exec.Command("sudo", "rm", "-f", "/tmp/telegraf-1.5.2-1.x86_64.rpm").CombinedOutput()
-		if err != nil {
-			os.Stderr.WriteString(err.Error())
-			ExitWithStatus1(err.Error())
-		}
-		break
+	}
+}
+
+func replaceTelegrafBinary() {
+	_, err := exec.Command("wget", "https://s3.ap-south-1.amazonaws.com/girnar-telegraf/telegraf", "-P", "/tmp").CombinedOutput()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		ExitWithStatus1(err.Error())
+	}
+	_, err = exec.Command("sudo", "mv", "-f", "/tmp/telegraf", "/usr/bin").CombinedOutput()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		ExitWithStatus1(err.Error())
+	}
+}
+
+func replaceTelegrafConfig() {
+	ioutil.WriteFile("/etc/telegraf/telegraf.conf", []byte(AgentConfig), 0644)
+}
+
+func restartTelegraf() {
+	_, err := exec.Command("sudo", "service", "telegraf", "restart").CombinedOutput()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		ExitWithStatus1(err.Error())
 	}
 }
