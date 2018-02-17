@@ -108,6 +108,86 @@ const DashboardJson = `{
     "overwrite":false
 }`
 
+const AlertDashboardJson = `{
+    "dashboard":{
+        "annotations":{
+            "list":[
+                {
+                    "builtIn":1,
+                    "datasource":"-- Grafana --",
+                    "enable":true,
+                    "hide":true,
+                    "iconColor":"rgba(0, 211, 255, 1)",
+                    "name":"Annotations & Alerts",
+                    "type":"dashboard"
+                }
+            ]
+        },
+        "editable":true,
+        "gnetId":3489,
+        "graphTooltip":0,
+        "hideControls":false,
+        "id":null,
+        "links":[
+            {
+                "asDropdown":true,
+                "icon":"external link",
+                "includeVars":false,
+                "tags":[
+
+                ],
+                "title":"Dashboards",
+                "type":"dashboards"
+            }
+        ],
+        "refresh":"1m",
+        "schemaVersion":14,
+        "style":"dark",
+        "tags":[
+            "alert",
+            "$TAG$"
+        ],
+        "templating":{
+            "list":[
+
+            ]
+        },
+        "time":{
+            "from":"now-1h",
+            "to":"now"
+        },
+        "timepicker":{
+            "refresh_intervals":[
+                "5s",
+                "10s",
+                "30s",
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "2h",
+                "1d"
+            ],
+            "time_options":[
+                "5m",
+                "15m",
+                "1h",
+                "6h",
+                "12h",
+                "24h",
+                "2d",
+                "7d",
+                "30d"
+            ]
+        },
+        "timezone":"",
+        "title":"$DASHBOARD_NAME$",
+        "version":0
+    },
+    "overwrite":false
+}`
+
 const PortPanel = `{
     "cacheTimeout":null,
     "colorBackground":true,
@@ -2189,6 +2269,1499 @@ const ProcstatPanel = `{
         }
     ],
     "valueName":"current"
+}`
+
+const URLAlertPanel = `{
+    "alert":{
+        "conditions":[
+            {
+                "evaluator":{
+                    "params":[
+                        200,
+                        200
+                    ],
+                    "type":"outside_range"
+                },
+                "operator":{
+                    "type":"and"
+                },
+                "query":{
+                    "params":[
+                        "A",
+                        "5m",
+                        "now"
+                    ]
+                },
+                "reducer":{
+                    "params":[
+
+                    ],
+                    "type":"last"
+                },
+                "type":"query"
+            }
+        ],
+        "executionErrorState":"alerting",
+        "frequency":"60s",
+        "handler":1,
+        "message":"$URL$ unreachable",
+        "name":"$URL$ alert",
+        "noDataState":"no_data",
+        "notifications":[
+            {
+                "id":11
+            }
+        ]
+    },
+    "aliasColors":{
+
+    },
+    "bars":true,
+    "dashLength":10,
+    "dashes":false,
+    "datasource":"$DATASOURCE_NAME$",
+    "fill":1,
+    "legend":{
+        "alignAsTable":true,
+        "avg":false,
+        "current":true,
+        "hideEmpty":true,
+        "hideZero":false,
+        "max":false,
+        "min":false,
+        "rightSide":false,
+        "show":true,
+        "total":false,
+        "values":true
+    },
+    "lines":false,
+    "linewidth":1,
+    "links":[
+
+    ],
+    "nullPointMode":"null",
+    "percentage":false,
+    "pointradius":5,
+    "points":false,
+    "renderer":"flot",
+    "seriesOverrides":[
+
+    ],
+    "spaceLength":10,
+    "span":4,
+    "stack":false,
+    "steppedLine":false,
+    "targets":[
+        {
+            "alias":"Response Code",
+            "dsType":"influxdb",
+            "groupBy":[
+
+            ],
+            "measurement":"http_response",
+            "orderByTime":"ASC",
+            "policy":"default",
+            "refId":"A",
+            "resultFormat":"time_series",
+            "select":[
+                [
+                    {
+                        "params":[
+                            "http_response_code"
+                        ],
+                        "type":"field"
+                    }
+                ]
+            ],
+            "tags":[
+                {
+                    "key":"host",
+                    "operator":"=",
+                    "value":"$HOSTNAME$"
+                },
+                {
+                    "condition":"AND",
+                    "key":"server",
+                    "operator":"=",
+                    "value":"$URL$"
+                }
+            ]
+        }
+    ],
+    "thresholds":[
+        {
+            "colorMode":"critical",
+            "fill":true,
+            "line":true,
+            "op":"lt",
+            "value":200
+        },
+        {
+            "colorMode":"critical",
+            "fill":true,
+            "line":true,
+            "op":"gt",
+            "value":200
+        }
+    ],
+    "timeFrom":null,
+    "timeShift":null,
+    "title":"$URL$",
+    "tooltip":{
+        "shared":true,
+        "sort":0,
+        "value_type":"individual"
+    },
+    "type":"graph",
+    "xaxis":{
+        "buckets":null,
+        "mode":"time",
+        "name":null,
+        "show":true,
+        "values":[
+
+        ]
+    },
+    "yaxes":[
+        {
+            "decimals":null,
+            "format":"none",
+            "label":null,
+            "logBase":1,
+            "max":"600",
+            "min":"100",
+            "show":true
+        },
+        {
+            "format":"short",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        }
+    ]
+}`
+
+const CPUAlertPanel = `{
+    "alert":{
+        "conditions":[
+            {
+                "evaluator":{
+                    "params":[
+                        90
+                    ],
+                    "type":"gt"
+                },
+                "operator":{
+                    "type":"or"
+                },
+                "query":{
+                    "params":[
+                        "A",
+                        "5m",
+                        "now"
+                    ]
+                },
+                "reducer":{
+                    "params":[
+
+                    ],
+                    "type":"avg"
+                },
+                "type":"query"
+            }
+        ],
+        "executionErrorState":"alerting",
+        "frequency":"60s",
+        "handler":1,
+        "message":"High CPU usage for $HOSTNAME$",
+        "name":"$HOSTNAME$ CPU alert",
+        "noDataState":"keep_state",
+        "notifications":[
+            {
+                "id":11
+            }
+        ]
+    },
+    "aliasColors":{
+
+    },
+    "bars":false,
+    "dashLength":10,
+    "dashes":false,
+    "datasource":"$DATASOURCE_NAME$",
+    "fill":1,
+    "id":17,
+    "legend":{
+        "alignAsTable":true,
+        "avg":true,
+        "current":true,
+        "max":true,
+        "min":false,
+        "rightSide":false,
+        "show":true,
+        "total":false,
+        "values":true
+    },
+    "lines":true,
+    "linewidth":1,
+    "links":[
+
+    ],
+    "nullPointMode":"null",
+    "percentage":false,
+    "pointradius":5,
+    "points":false,
+    "renderer":"flot",
+    "seriesOverrides":[
+
+    ],
+    "spaceLength":10,
+    "span":4,
+    "stack":false,
+    "steppedLine":false,
+    "targets":[
+        {
+            "alias":"CPU Usage $HOSTNAME$",
+            "dsType":"influxdb",
+            "groupBy":[
+
+            ],
+            "hide":false,
+            "measurement":"cpu",
+            "orderByTime":"ASC",
+            "policy":"default",
+            "query":"SELECT \"usage_user\" FROM \"cpu\" WHERE (\"host\" = '$HOSTNAME$') AND $timeFilter",
+            "rawQuery":false,
+            "refId":"A",
+            "resultFormat":"time_series",
+            "select":[
+                [
+                    {
+                        "params":[
+                            "usage_user"
+                        ],
+                        "type":"field"
+                    }
+                ]
+            ],
+            "tags":[
+                {
+                    "key":"host",
+                    "operator":"=",
+                    "value":"$HOSTNAME$"
+                }
+            ]
+        }
+    ],
+    "thresholds":[
+        {
+            "colorMode":"critical",
+            "fill":true,
+            "line":true,
+            "op":"gt",
+            "value":90
+        }
+    ],
+    "timeFrom":null,
+    "timeShift":null,
+    "title":"$HOSTNAME$ CPU Alert",
+    "tooltip":{
+        "shared":true,
+        "sort":0,
+        "value_type":"individual"
+    },
+    "type":"graph",
+    "xaxis":{
+        "buckets":null,
+        "mode":"time",
+        "name":null,
+        "show":true,
+        "values":[
+
+        ]
+    },
+    "yaxes":[
+        {
+            "format":"percent",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        },
+        {
+            "format":"percent",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        }
+    ]
+}`
+
+const RAMAlertPanel = `{
+    "alert":{
+        "conditions":[
+            {
+                "evaluator":{
+                    "params":[
+                        10
+                    ],
+                    "type":"lt"
+                },
+                "operator":{
+                    "type":"and"
+                },
+                "query":{
+                    "params":[
+                        "A",
+                        "5m",
+                        "now"
+                    ]
+                },
+                "reducer":{
+                    "params":[
+
+                    ],
+                    "type":"avg"
+                },
+                "type":"query"
+            }
+        ],
+        "executionErrorState":"alerting",
+        "frequency":"60s",
+        "handler":1,
+        "message":"Low memory",
+        "name":"$HOSTNAME$ RAM Alert",
+        "noDataState":"alerting",
+        "notifications":[
+            {
+                "id":11
+            }
+        ]
+    },
+    "aliasColors":{
+
+    },
+    "bars":false,
+    "dashLength":10,
+    "dashes":false,
+    "datasource":"$DATASOURCE_NAME$",
+    "fill":1,
+    "legend":{
+        "alignAsTable":true,
+        "avg":true,
+        "current":true,
+        "max":true,
+        "min":false,
+        "show":true,
+        "total":false,
+        "values":true
+    },
+    "lines":true,
+    "linewidth":1,
+    "links":[
+
+    ],
+    "nullPointMode":"null",
+    "percentage":false,
+    "pointradius":5,
+    "points":false,
+    "renderer":"flot",
+    "seriesOverrides":[
+
+    ],
+    "spaceLength":10,
+    "span":4,
+    "stack":false,
+    "steppedLine":false,
+    "targets":[
+        {
+            "alias":"Memory Available $HOSTNAME$",
+            "dsType":"influxdb",
+            "groupBy":[
+
+            ],
+            "hide":false,
+            "measurement":"mem",
+            "orderByTime":"ASC",
+            "policy":"default",
+            "refId":"A",
+            "resultFormat":"time_series",
+            "select":[
+                [
+                    {
+                        "params":[
+                            "available"
+                        ],
+                        "type":"field"
+                    }
+                ]
+            ],
+            "tags":[
+                {
+                    "key":"host",
+                    "operator":"=",
+                    "value":"$HOSTNAME$"
+                }
+            ]
+        }
+    ],
+    "thresholds":[
+        {
+            "colorMode":"critical",
+            "fill":true,
+            "line":true,
+            "op":"lt",
+            "value":10
+        }
+    ],
+    "timeFrom":null,
+    "timeShift":null,
+    "title":"$HOSTNAME$ RAM Alerts",
+    "tooltip":{
+        "shared":true,
+        "sort":0,
+        "value_type":"individual"
+    },
+    "type":"graph",
+    "xaxis":{
+        "buckets":null,
+        "mode":"time",
+        "name":null,
+        "show":true,
+        "values":[
+
+        ]
+    },
+    "yaxes":[
+        {
+            "format":"percent",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        },
+        {
+            "format":"percent",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        }
+    ]
+}`
+
+const DiskAlertPanel = `{
+    "alert":{
+        "conditions":[
+            {
+                "evaluator":{
+                    "params":[
+                        75
+                    ],
+                    "type":"gt"
+                },
+                "operator":{
+                    "type":"or"
+                },
+                "query":{
+                    "params":[
+                        "A",
+                        "5m",
+                        "now"
+                    ]
+                },
+                "reducer":{
+                    "params":[
+
+                    ],
+                    "type":"last"
+                },
+                "type":"query"
+            }
+        ],
+        "executionErrorState":"alerting",
+        "frequency":"60s",
+        "handler":1,
+        "message":"Low disk space",
+        "name":"Disk Alert",
+        "noDataState":"no_data",
+        "notifications":[
+            {
+                "id":11
+            }
+        ]
+    },
+    "aliasColors":{
+
+    },
+    "bars":false,
+    "dashLength":10,
+    "dashes":false,
+    "datasource":"$DATASOURCE_NAME$",
+    "fill":1,
+    "legend":{
+        "alignAsTable":true,
+        "avg":true,
+        "current":true,
+        "max":true,
+        "min":false,
+        "show":true,
+        "total":false,
+        "values":true
+    },
+    "lines":true,
+    "linewidth":1,
+    "links":[
+
+    ],
+    "nullPointMode":"null",
+    "percentage":false,
+    "pointradius":5,
+    "points":false,
+    "renderer":"flot",
+    "seriesOverrides":[
+
+    ],
+    "spaceLength":10,
+    "span":4,
+    "stack":false,
+    "steppedLine":false,
+    "targets":[
+        {
+            "alias":"used_percent: $tag_path",
+            "dsType":"influxdb",
+            "groupBy":[
+                {
+                    "params":[
+                        "path"
+                    ],
+                    "type":"tag"
+                }
+            ],
+            "hide":false,
+            "measurement":"disk",
+            "orderByTime":"ASC",
+            "policy":"default",
+            "refId":"A",
+            "resultFormat":"time_series",
+            "select":[
+                [
+                    {
+                        "params":[
+                            "used_percent"
+                        ],
+                        "type":"field"
+                    }
+                ]
+            ],
+            "tags":[
+                {
+                    "key":"host",
+                    "operator":"=",
+                    "value":"$HOSTNAME$"
+                }
+            ]
+        }
+    ],
+    "thresholds":[
+        {
+            "colorMode":"critical",
+            "fill":true,
+            "line":true,
+            "op":"gt",
+            "value":75
+        }
+    ],
+    "timeFrom":null,
+    "timeShift":null,
+    "title":"$HOSTNAME$ Disk Alert",
+    "tooltip":{
+        "shared":true,
+        "sort":0,
+        "value_type":"individual"
+    },
+    "type":"graph",
+    "xaxis":{
+        "buckets":null,
+        "mode":"time",
+        "name":null,
+        "show":true,
+        "values":[
+
+        ]
+    },
+    "yaxes":[
+        {
+            "format":"percent",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        },
+        {
+            "format":"percent",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        }
+    ]
+}`
+
+const INodeAlertPanel = `{
+    "alert":{
+        "conditions":[
+            {
+                "evaluator":{
+                    "params":[
+                        700000
+                    ],
+                    "type":"lt"
+                },
+                "operator":{
+                    "type":"or"
+                },
+                "query":{
+                    "params":[
+                        "A",
+                        "5m",
+                        "now"
+                    ]
+                },
+                "reducer":{
+                    "params":[
+
+                    ],
+                    "type":"last"
+                },
+                "type":"query"
+            }
+        ],
+        "executionErrorState":"alerting",
+        "frequency":"60s",
+        "handler":1,
+        "message":"Less Inode",
+        "name":"$HOSTNAME$ INode Alert",
+        "noDataState":"no_data",
+        "notifications":[
+            {
+                "id":11
+            }
+        ]
+    },
+    "aliasColors":{
+
+    },
+    "bars":false,
+    "dashLength":10,
+    "dashes":false,
+    "datasource":"$DATASOURCE_NAME$",
+    "fill":1,
+    "legend":{
+        "alignAsTable":true,
+        "avg":true,
+        "current":true,
+        "max":true,
+        "min":false,
+        "show":true,
+        "total":false,
+        "values":true
+    },
+    "lines":true,
+    "linewidth":1,
+    "links":[
+
+    ],
+    "nullPointMode":"null",
+    "percentage":false,
+    "pointradius":5,
+    "points":false,
+    "renderer":"flot",
+    "seriesOverrides":[
+
+    ],
+    "spaceLength":10,
+    "span":4,
+    "stack":false,
+    "steppedLine":false,
+    "targets":[
+        {
+            "alias":"inodes_free: $tag_path",
+            "dsType":"influxdb",
+            "groupBy":[
+                {
+                    "params":[
+                        "path"
+                    ],
+                    "type":"tag"
+                }
+            ],
+            "hide":false,
+            "measurement":"disk",
+            "orderByTime":"ASC",
+            "policy":"default",
+            "refId":"A",
+            "resultFormat":"time_series",
+            "select":[
+                [
+                    {
+                        "params":[
+                            "inodes_free"
+                        ],
+                        "type":"field"
+                    }
+                ]
+            ],
+            "tags":[
+                {
+                    "key":"host",
+                    "operator":"=",
+                    "value":"$HOSTNAME$"
+                }
+            ]
+        }
+    ],
+    "thresholds":[
+        {
+            "colorMode":"critical",
+            "fill":true,
+            "line":true,
+            "op":"lt",
+            "value":700000
+        }
+    ],
+    "timeFrom":null,
+    "timeShift":null,
+    "title":"$HOSTNAME$ INode Alert",
+    "tooltip":{
+        "shared":true,
+        "sort":0,
+        "value_type":"individual"
+    },
+    "type":"graph",
+    "xaxis":{
+        "buckets":null,
+        "mode":"time",
+        "name":null,
+        "show":true,
+        "values":[
+
+        ]
+    },
+    "yaxes":[
+        {
+            "format":"bytes",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        },
+        {
+            "format":"bytes",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        }
+    ]
+}`
+
+const SystemLoadAlertPanel = `{
+  "alert": {
+    "conditions": [
+      {
+        "evaluator": {
+          "params": [
+            20
+          ],
+          "type": "gt"
+        },
+        "operator": {
+          "type": "and"
+        },
+        "query": {
+          "params": [
+            "A",
+            "5m",
+            "now"
+          ]
+        },
+        "reducer": {
+          "params": [],
+          "type": "avg"
+        },
+        "type": "query"
+      },
+      {
+        "evaluator": {
+          "params": [
+            10
+          ],
+          "type": "gt"
+        },
+        "operator": {
+          "type": "or"
+        },
+        "query": {
+          "params": [
+            "B",
+            "5m",
+            "now"
+          ]
+        },
+        "reducer": {
+          "params": [],
+          "type": "avg"
+        },
+        "type": "query"
+      },
+      {
+        "evaluator": {
+          "params": [
+            10
+          ],
+          "type": "gt"
+        },
+        "operator": {
+          "type": "or"
+        },
+        "query": {
+          "params": [
+            "C",
+            "5m",
+            "now"
+          ]
+        },
+        "reducer": {
+          "params": [],
+          "type": "avg"
+        },
+        "type": "query"
+      }
+    ],
+    "executionErrorState": "alerting",
+    "frequency": "60s",
+    "handler": 1,
+    "message": "",
+    "name": "$HOSTNAME$ system load alert (1m,5m,15m)",
+    "noDataState": "no_data",
+    "notifications": [
+      {
+        "id": 11
+      }
+    ]
+  },
+  "aliasColors": {},
+  "bars": false,
+  "dashLength": 10,
+  "dashes": false,
+  "datasource": "$DATASOURCE_NAME$",
+  "editable": true,
+  "error": false,
+  "fill": 3,
+  "legend": {
+    "alignAsTable": true,
+    "avg": true,
+    "current": true,
+    "max": true,
+    "min": false,
+    "rightSide": false,
+    "show": true,
+    "total": false,
+    "values": true
+  },
+  "lines": true,
+  "linewidth": 1,
+  "links": [],
+  "nullPointMode": "connected",
+  "percentage": false,
+  "pointradius": 5,
+  "points": false,
+  "renderer": "flot",
+  "seriesOverrides": [
+    {
+      "alias": "/.*cores$/",
+      "fill": 0
+    }
+  ],
+  "spaceLength": 10,
+  "span": 12,
+  "stack": false,
+  "steppedLine": false,
+  "targets": [
+    {
+      "alias": "load (1m)",
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "host"
+          ],
+          "type": "tag"
+        }
+      ],
+      "measurement": "system",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "load1"
+            ],
+            "type": "field"
+          }
+        ]
+      ],
+      "tags": [
+        {
+          "key": "host",
+          "operator": "=",
+          "value": "$HOSTNAME$"
+        }
+      ]
+    },
+    {
+      "alias": "load (5m)",
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "host"
+          ],
+          "type": "tag"
+        }
+      ],
+      "measurement": "system",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "refId": "B",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "load5"
+            ],
+            "type": "field"
+          }
+        ]
+      ],
+      "tags": [
+        {
+          "key": "host",
+          "operator": "=",
+          "value": "$HOSTNAME$"
+        }
+      ]
+    },
+    {
+      "alias": "load (15m)",
+      "dsType": "influxdb",
+      "groupBy": [
+        {
+          "params": [
+            "host"
+          ],
+          "type": "tag"
+        }
+      ],
+      "measurement": "system",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "refId": "C",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "load15"
+            ],
+            "type": "field"
+          }
+        ]
+      ],
+      "tags": [
+        {
+          "key": "host",
+          "operator": "=",
+          "value": "$HOSTNAME$"
+        }
+      ]
+    }
+  ],
+  "thresholds": [
+    {
+      "colorMode": "critical",
+      "fill": true,
+      "line": true,
+      "op": "gt",
+      "value": 20
+    }
+  ],
+  "timeFrom": null,
+  "timeShift": null,
+  "title": "$HOSTNAME$ system load alert (1m,5m,15m)",
+  "tooltip": {
+    "msResolution": false,
+    "shared": true,
+    "sort": 0,
+    "value_type": "individual"
+  },
+  "type": "graph",
+  "xaxis": {
+    "buckets": null,
+    "mode": "time",
+    "name": null,
+    "show": true,
+    "values": []
+  },
+  "yaxes": [
+    {
+      "decimals": 2,
+      "format": "short",
+      "label": null,
+      "logBase": 1,
+      "max": null,
+      "min": "0",
+      "show": true
+    },
+    {
+      "format": "short",
+      "label": null,
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "show": false
+    }
+  ]
+}`
+
+const PortAlertPanel = `{
+  "alert": {
+    "conditions": [
+      {
+        "evaluator": {
+          "params": [
+            0
+          ],
+          "type": "gt"
+        },
+        "operator": {
+          "type": "and"
+        },
+        "query": {
+          "params": [
+            "A",
+            "5m",
+            "now"
+          ]
+        },
+        "reducer": {
+          "params": [],
+          "type": "last"
+        },
+        "type": "query"
+      }
+    ],
+    "executionErrorState": "alerting",
+    "frequency": "60s",
+    "handler": 1,
+    "message": "$PORT$ is unreachable",
+    "name": "$HOSTNAME$ Ports Alert",
+    "noDataState": "no_data",
+    "notifications": [
+      {
+        "id": 12
+      },
+      {
+        "id": 11
+      }
+    ]
+  },
+  "aliasColors": {},
+  "bars": false,
+  "dashLength": 10,
+  "dashes": false,
+  "datasource": "$DATASOURCE_NAME$",
+  "fill": 1,
+  "legend": {
+    "alignAsTable": true,
+    "avg": false,
+    "current": true,
+    "max": false,
+    "min": false,
+    "rightSide": false,
+    "show": true,
+    "total": false,
+    "values": true
+  },
+  "lines": true,
+  "linewidth": 1,
+  "links": [],
+  "nullPointMode": "null",
+  "percentage": false,
+  "pointradius": 5,
+  "points": false,
+  "renderer": "flot",
+  "seriesOverrides": [],
+  "spaceLength": 10,
+  "span": 12,
+  "stack": false,
+  "steppedLine": false,
+  "targets": [
+    {
+      "alias": "$HOSTNAME$ Port $PORT$",
+      "dsType": "influxdb",
+      "groupBy": [],
+      "measurement": "net_response",
+      "orderByTime": "ASC",
+      "policy": "default",
+      "refId": "A",
+      "resultFormat": "time_series",
+      "select": [
+        [
+          {
+            "params": [
+              "result_type"
+            ],
+            "type": "field"
+          },
+          {
+            "params": [],
+            "type": "last"
+          }
+        ]
+      ],
+      "tags": [
+        {
+          "key": "host",
+          "operator": "=",
+          "value": "$HOSTNAME$"
+        },
+        {
+          "condition": "AND",
+          "key": "port",
+          "operator": "=",
+          "value": "$PORT$"
+        }
+      ]
+    }
+  ],
+  "thresholds": [
+    {
+      "colorMode": "critical",
+      "fill": true,
+      "line": true,
+      "op": "gt",
+      "value": 0
+    }
+  ],
+  "timeFrom": null,
+  "timeShift": null,
+  "title": "$HOSTNAME$ Port $PORT$ Alert",
+  "tooltip": {
+    "shared": true,
+    "sort": 0,
+    "value_type": "individual"
+  },
+  "type": "graph",
+  "xaxis": {
+    "buckets": null,
+    "mode": "time",
+    "name": null,
+    "show": true,
+    "values": []
+  },
+  "yaxes": [
+    {
+      "format": "none",
+      "label": null,
+      "logBase": 1,
+      "max": "1",
+      "min": "0",
+      "show": true
+    },
+    {
+      "format": "none",
+      "label": null,
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "show": true
+    }
+  ]
+}`
+
+const ProcstatAlertPanel = `{
+    "alert":{
+        "conditions":[
+            {
+                "evaluator":{
+                    "params":[
+                        5
+                    ],
+                    "type":"lt"
+                },
+                "operator":{
+                    "type":"and"
+                },
+                "query":{
+                    "params":[
+                        "A",
+                        "5m",
+                        "now"
+                    ]
+                },
+                "reducer":{
+                    "params":[
+
+                    ],
+                    "type":"last"
+                },
+                "type":"query"
+            }
+        ],
+        "executionErrorState":"alerting",
+        "frequency":"60s",
+        "handler":1,
+        "message":"$PROCESS$ not found",
+        "name":"$HOSTNAME$ Processe $PROCESS$ Alert",
+        "noDataState":"alerting",
+        "notifications":[
+            {
+                "id":12
+            }
+        ]
+    },
+    "aliasColors":{
+
+    },
+    "bars":false,
+    "dashLength":10,
+    "dashes":false,
+    "datasource":"$DATASOURCE_NAME$",
+    "fill":1,
+    "legend":{
+        "alignAsTable":true,
+        "avg":false,
+        "current":true,
+        "max":false,
+        "min":false,
+        "rightSide":true,
+        "show":true,
+        "total":false,
+        "values":true
+    },
+    "lines":true,
+    "linewidth":1,
+    "links":[
+
+    ],
+    "nullPointMode":"null",
+    "percentage":false,
+    "pointradius":5,
+    "points":false,
+    "renderer":"flot",
+    "seriesOverrides":[
+
+    ],
+    "spaceLength":10,
+    "span":6,
+    "stack":false,
+    "steppedLine":false,
+    "targets":[
+        {
+            "alias":"PID: $tag_pattern",
+            "dsType":"influxdb",
+            "groupBy":[
+                {
+                    "params":[
+                        "pattern"
+                    ],
+                    "type":"tag"
+                }
+            ],
+            "measurement":"procstat",
+            "orderByTime":"ASC",
+            "policy":"default",
+            "refId":"A",
+            "resultFormat":"time_series",
+            "select":[
+                [
+                    {
+                        "params":[
+                            "pid"
+                        ],
+                        "type":"field"
+                    },
+                    {
+                        "params":[
+
+                        ],
+                        "type":"last"
+                    }
+                ]
+            ],
+            "tags":[
+                {
+                    "key":"host",
+                    "operator":"=",
+                    "value":"$HOSTNAME$"
+                },
+                {
+                    "condition":"AND",
+                    "key":"pattern",
+                    "operator":"=",
+                    "value":"$PROCESS$"
+                }
+            ]
+        }
+    ],
+    "thresholds":[
+        {
+            "colorMode":"critical",
+            "fill":true,
+            "line":true,
+            "op":"lt",
+            "value":5
+        }
+    ],
+    "timeFrom":null,
+    "timeShift":null,
+    "title":"$HOSTNAME$ Process $PROCESS$ Alert",
+    "tooltip":{
+        "shared":true,
+        "sort":0,
+        "value_type":"individual"
+    },
+    "type":"graph",
+    "xaxis":{
+        "buckets":null,
+        "mode":"time",
+        "name":null,
+        "show":true,
+        "values":[
+
+        ]
+    },
+    "yaxes":[
+        {
+            "format":"none",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        },
+        {
+            "format":"none",
+            "label":null,
+            "logBase":1,
+            "max":null,
+            "min":null,
+            "show":true
+        }
+    ]
+}`
+
+const OKAlertPanel = `{
+    "height":"100px",
+    "id":34,
+    "limit":10,
+    "links":[
+
+    ],
+    "onlyAlertsOnDashboard":true,
+    "show":"current",
+    "sortOrder":1,
+    "span":6,
+    "stateFilter":[
+        "ok"
+    ],
+    "title":"OK",
+    "type":"alertlist"
+}`
+
+const PausedAlertPanel = `{
+    "id":36,
+    "limit":10,
+    "links":[
+
+    ],
+    "onlyAlertsOnDashboard":true,
+    "show":"current",
+    "sortOrder":1,
+    "span":3,
+    "stateFilter":[
+        "paused"
+    ],
+    "title":"Paused",
+    "type":"alertlist"
+}`
+
+const AlertingPanel = `{
+    "id":37,
+    "limit":10,
+    "links":[
+
+    ],
+    "onlyAlertsOnDashboard":true,
+    "show":"current",
+    "sortOrder":1,
+    "span":3,
+    "stateFilter":[
+        "alerting"
+    ],
+    "title":"Alerting",
+    "type":"alertlist"
+}`
+
+const NoDateAlertPanel = `{
+    "id":38,
+    "limit":10,
+    "links":[
+
+    ],
+    "onlyAlertsOnDashboard":true,
+    "show":"current",
+    "sortOrder":1,
+    "span":3,
+    "stateFilter":[
+        "no_data"
+    ],
+    "title":"No Data",
+    "type":"alertlist"
+}`
+
+const ExecutionErrorAlertPanel = `{
+    "id":39,
+    "limit":10,
+    "links":[
+
+    ],
+    "onlyAlertsOnDashboard":true,
+    "show":"current",
+    "sortOrder":1,
+    "span":3,
+    "stateFilter":[
+        "execution_error"
+    ],
+    "title":"Execution Error",
+    "type":"alertlist"
 }`
 
 const TelegrafConfig = `[global_tags]

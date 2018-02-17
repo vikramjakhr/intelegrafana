@@ -29,6 +29,7 @@ type CliArgs struct {
 type GrafanaArgs struct {
 	DashboardName  string
 	DatasourceName string
+	Hostname       string
 	Ports          string
 	URLs           string
 	Process        string
@@ -45,6 +46,7 @@ func main() {
 	installTelegraf(getOSName())
 	initAgentConfig()
 	createDashboard()
+	createAlertDashboard()
 	changeTelegrafConfPermission()
 	replaceTelegrafConfig()
 	restartTelegraf()
@@ -55,6 +57,7 @@ func main() {
 func parseInputs() {
 	dashboardName()
 	datasourceName()
+	hostname()
 	ports()
 	urls()
 	process()
@@ -122,6 +125,24 @@ func datasourceName() {
 			input, _ = reader.ReadString('\n')
 		} else {
 			DashboardInfo.DatasourceName = strings.Trim(strings.Trim(input, " "), "\n")
+			break
+		}
+		count++
+		checkExit(count, 3)
+	}
+}
+
+func hostname() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter hostname: ")
+	input, _ := reader.ReadString('\n')
+	count := 1
+	for ; count < 3; {
+		if input == "\n" || input == "" || strings.Trim(input, " ") == "" {
+			fmt.Println("Please enter a valid hostname: ")
+			input, _ = reader.ReadString('\n')
+		} else {
+			DashboardInfo.Hostname = strings.Trim(strings.Trim(input, " "), "\n")
 			break
 		}
 		count++
@@ -263,9 +284,74 @@ func createDashboard() {
 	m := make(map[string]interface{})
 	json.Unmarshal(resp, &m)
 	if statusCode == http.StatusOK && m["status"] == "success" {
-		fmt.Printf("Dashboard with name %s created successfully.", DashboardInfo.DatasourceName)
+		fmt.Printf("Dashboard with name %s created successfully.", DashboardInfo.DashboardName)
 	} else if statusCode == http.StatusPreconditionFailed {
-		fmt.Printf("Dashboard with name %s already exists.", DashboardInfo.DatasourceName)
+		fmt.Printf("Dashboard with name %s already exists.", DashboardInfo.DashboardName)
+	} else {
+		ExitWithStatus1(fmt.Sprintf("Invalid status code found: %d.", statusCode))
+	}
+}
+
+func createAlertDashboard() {
+	dashboardName := DashboardInfo.DashboardName + " Alerts"
+	var payload map[string]map[string]interface{}
+	var rows []map[string]interface{}
+	var djson string = AlertDashboardJson
+	djson = strings.Replace(djson, "$DASHBOARD_NAME$", dashboardName, -1)
+	djson = strings.Replace(djson, "$TAG$", DashboardInfo.Hostname, -1)
+	djson = strings.Replace(djson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+	row := createAllAlertsRow()
+	if row != nil {
+		rows = append(rows, row)
+	}
+	row = createURLAlertRow()
+	if row != nil {
+		rows = append(rows, row)
+	}
+	row = createPortsAlertRow()
+	if row != nil {
+		rows = append(rows, row)
+	}
+	row = createProcstatAlertRow()
+	if row != nil {
+		rows = append(rows, row)
+	}
+	row = createDiskInodeAlertRow()
+	if row != nil {
+		rows = append(rows, row)
+	}
+	row = createCPURAMAlertRow()
+	if row != nil {
+		rows = append(rows, row)
+	}
+	row = createSystemLoadAlertRow()
+	if row != nil {
+		rows = append(rows, row)
+	}
+	json.Unmarshal([]byte(djson), &payload)
+	dashboard := payload["dashboard"]
+	dashboard["rows"] = rows
+
+	// creating dashboard
+	byts, err := json.MarshalIndent(payload, "", "  ")
+	if err != nil {
+		fmt.Println("Error occurred while parsing dashboard json.")
+		fmt.Println(err)
+		ExitWithStatus1("Json parsing error")
+	}
+	//fmt.Println(string(byts))
+	statusCode, resp, err := httpPost(fmt.Sprintf("%s/api/dashboards/db", *Args.GrafanaURL),
+		authHeader(*Args.ApiKey), nil, bytes.NewReader(byts))
+	if err != nil {
+		fmt.Println("Some error occurred while crating dashboard:", err)
+		ExitWithStatus1("Error creating dashboard.")
+	}
+	m := make(map[string]interface{})
+	json.Unmarshal(resp, &m)
+	if statusCode == http.StatusOK && m["status"] == "success" {
+		fmt.Printf("Dashboard with name %s created successfully.", dashboardName)
+	} else if statusCode == http.StatusPreconditionFailed {
+		fmt.Printf("Dashboard with name %s already exists.", dashboardName)
 	} else {
 		ExitWithStatus1(fmt.Sprintf("Invalid status code found: %d.", statusCode))
 	}
@@ -350,7 +436,60 @@ func createURLRow() map[string]interface{} {
 			buff.WriteString(strings.Replace(TelegrafInputHttpResponse, "$URL$", p, -1))
 			AgentConfig = buff.String()
 		}
-		row := newRow(URL)
+		row := newRow("URL Monitoring", 80)
+		row["panels"] = panels
+		return row
+	}
+	return nil
+}
+
+func createAllAlertsRow() map[string]interface{} {
+	var panels []map[string]interface{}
+	var panel map[string]interface{}
+	json.Unmarshal([]byte(OKAlertPanel), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	panel = make(map[string]interface{})
+	json.Unmarshal([]byte(PausedAlertPanel), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	panel = make(map[string]interface{})
+	json.Unmarshal([]byte(AlertingPanel), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	panel = make(map[string]interface{})
+	json.Unmarshal([]byte(NoDateAlertPanel), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	panel = make(map[string]interface{})
+	json.Unmarshal([]byte(ExecutionErrorAlertPanel), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	row := newRow("Alerts List", 300)
+	row["panels"] = panels
+	return row
+}
+
+func createURLAlertRow() map[string]interface{} {
+	if DashboardInfo.URLs != "" {
+		urls := strings.Split(DashboardInfo.URLs, ",")
+		var panels []map[string]interface{}
+		for _, p := range urls {
+			var paneljson string = URLAlertPanel
+			paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
+			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+			paneljson = strings.Replace(paneljson, "$URL$", p, -1)
+			var panel map[string]interface{}
+			json.Unmarshal([]byte(paneljson), &panel)
+			panel["id"] = rand.Intn(1000)
+			panels = append(panels, panel)
+		}
+		row := newRow("URL Alerts", 230)
 		row["panels"] = panels
 		return row
 	}
@@ -376,7 +515,28 @@ func createPortsRow() map[string]interface{} {
 			buff.WriteString(strings.Replace(TelegrafInputNetResponse, "$PORT$", p, -1))
 			AgentConfig = buff.String()
 		}
-		row := newRow(PORTS)
+		row := newRow("Ports Monitoring", 63)
+		row["panels"] = panels
+		return row
+	}
+	return nil
+}
+
+func createPortsAlertRow() map[string]interface{} {
+	if DashboardInfo.Ports != "" {
+		ports := strings.Split(DashboardInfo.Ports, ",")
+		var panels []map[string]interface{}
+		for _, p := range ports {
+			var paneljson string = PortAlertPanel
+			paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
+			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+			paneljson = strings.Replace(paneljson, "$PORT$", p, -1)
+			var panel map[string]interface{}
+			json.Unmarshal([]byte(paneljson), &panel)
+			panel["id"] = rand.Intn(1000)
+			panels = append(panels, panel)
+		}
+		row := newRow("Ports Alert", 230)
 		row["panels"] = panels
 		return row
 	}
@@ -402,7 +562,28 @@ func createProcstatRow() map[string]interface{} {
 			buff.WriteString(strings.Replace(TelegrafInputProcstat, "$PROCESS$", p, -1))
 			AgentConfig = buff.String()
 		}
-		row := newRow(PROCSTATS)
+		row := newRow("Process monitoring", 63)
+		row["panels"] = panels
+		return row
+	}
+	return nil
+}
+
+func createProcstatAlertRow() map[string]interface{} {
+	if DashboardInfo.Process != "" {
+		ports := strings.Split(DashboardInfo.Process, ",")
+		var panels []map[string]interface{}
+		for _, p := range ports {
+			var paneljson string = ProcstatPanel
+			paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
+			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+			paneljson = strings.Replace(paneljson, "$PROCESS$", p, -1)
+			var panel map[string]interface{}
+			json.Unmarshal([]byte(paneljson), &panel)
+			panel["id"] = rand.Intn(1000)
+			panels = append(panels, panel)
+		}
+		row := newRow("Process Alerts", 230)
 		row["panels"] = panels
 		return row
 	}
@@ -432,7 +613,30 @@ func createDiskProcessSwapRow() map[string]interface{} {
 	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
-	row := newRow(DISK_PROCESS_SWAP)
+	row := newRow("Disk, Process & Swap Monitoring", 230)
+	row["panels"] = panels
+	return row
+}
+
+func createDiskInodeAlertRow() map[string]interface{} {
+	var panels []map[string]interface{}
+	var paneljson string = DiskAlertPanel
+	paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+	var panel map[string]interface{}
+	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	paneljson = INodeAlertPanel
+	paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+	panel = make(map[string]interface{})
+	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	row := newRow("Disk & Inode Alerts", 230)
 	row["panels"] = panels
 	return row
 }
@@ -453,7 +657,30 @@ func createCPURAMRow() map[string]interface{} {
 	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
-	row := newRow(CPU_RAM)
+	row := newRow("CPU & RAM Monitoring", 230)
+	row["panels"] = panels
+	return row
+}
+
+func createCPURAMAlertRow() map[string]interface{} {
+	var panels []map[string]interface{}
+	var paneljson string = CPUAlertPanel
+	paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+	var panel map[string]interface{}
+	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	paneljson = RAMAlertPanel
+	paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+	panel = make(map[string]interface{})
+	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
+
+	row := newRow("CPU & RAM Alerts", 230)
 	row["panels"] = panels
 	return row
 }
@@ -474,56 +701,37 @@ func createIPSystemLoadRow() map[string]interface{} {
 	panel["id"] = rand.Intn(1000)
 	panels = append(panels, panel)
 
-	row := newRow(IP_SYSTEMLOAD)
+	row := newRow("IP Traffic & System load Monitoring", 230)
 	row["panels"] = panels
 	return row
 }
 
-const (
-	URL               = "URL"
-	PORTS             = "PORTS"
-	PROCSTATS         = "PROCSTATS"
-	DISK_PROCESS_SWAP = "DISK_PROCESS_SWAP"
-	CPU_RAM           = "CPU_RAM"
-	IP_SYSTEMLOAD     = "IP_SYSTEMLOAD"
-)
+func createSystemLoadAlertRow() map[string]interface{} {
+	var panels []map[string]interface{}
+	var paneljson string = SystemLoadAlertPanel
+	paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
+	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
+	var panel map[string]interface{}
+	json.Unmarshal([]byte(paneljson), &panel)
+	panel["id"] = rand.Intn(1000)
+	panels = append(panels, panel)
 
-func newRow(rType string) map[string]interface{} {
-	row := map[string]interface{}{
+	row := newRow("System load Alerts", 230)
+	row["panels"] = panels
+	return row
+}
+
+func newRow(name string, height int) map[string]interface{} {
+	return map[string]interface{}{
 		"collapse":        false,
 		"repeat":          nil,
 		"repeatIteration": nil,
 		"repeatRowId":     nil,
 		"showTitle":       false,
 		"titleSize":       "h6",
+		"title":           name,
+		"height":          height,
 	}
-	switch rType {
-	case URL:
-		row["title"] = fmt.Sprintf("%s Row", rType)
-		row["height"] = 80
-		break
-	case PORTS:
-		row["title"] = fmt.Sprintf("%s Row", rType)
-		row["height"] = 63
-		break
-	case PROCSTATS:
-		row["title"] = fmt.Sprintf("%s Row", rType)
-		row["height"] = 63
-		break
-	case DISK_PROCESS_SWAP:
-		row["title"] = fmt.Sprintf("%s Row", rType)
-		row["height"] = 230
-		break
-	case CPU_RAM:
-		row["title"] = fmt.Sprintf("%s Row", rType)
-		row["height"] = 230
-		break
-	case IP_SYSTEMLOAD:
-		row["title"] = fmt.Sprintf("%s Row", rType)
-		row["height"] = 230
-		break
-	}
-	return row
 }
 
 func httpPost(url string, headers map[string]string, params map[string]string, body io.Reader) (int, []byte, error) {
