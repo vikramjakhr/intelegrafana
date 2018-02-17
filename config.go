@@ -1912,7 +1912,7 @@ const SystemLoadPanel = `{
     ],
     "timeFrom":null,
     "timeShift":null,
-    "title":"system: load (5m)",
+    "title":"system: load (1m,5m,15m)",
     "tooltip":{
         "msResolution":false,
         "shared":true,
