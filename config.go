@@ -2246,7 +2246,7 @@ const ProcstatPanel = `{
                 {
                     "key":"host",
                     "operator":"=~",
-                    "value":"/^$host$/"
+                    "value":"$HOSTNAME$"
                 },
                 {
                     "condition":"AND",
@@ -2449,7 +2449,7 @@ const CPUAlertPanel = `{
             {
                 "evaluator":{
                     "params":[
-                        90
+                        75
                     ],
                     "type":"gt"
                 },
@@ -3083,7 +3083,7 @@ const SystemLoadAlertPanel = `{
       {
         "evaluator": {
           "params": [
-            20
+            8
           ],
           "type": "gt"
         },
@@ -3106,7 +3106,7 @@ const SystemLoadAlertPanel = `{
       {
         "evaluator": {
           "params": [
-            10
+            8
           ],
           "type": "gt"
         },
@@ -3129,7 +3129,7 @@ const SystemLoadAlertPanel = `{
       {
         "evaluator": {
           "params": [
-            10
+            8
           ],
           "type": "gt"
         },

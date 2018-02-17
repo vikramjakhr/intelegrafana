@@ -419,7 +419,7 @@ func createURLRow() map[string]interface{} {
 			paneljson = strings.Replace(paneljson, "$URL$", p, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
-			panel["id"] = rand.Intn(1000)
+			panel["id"] = rand.Intn(10000)
 			panels = append(panels, panel)
 
 			paneljson = PageLoadPanel
@@ -427,7 +427,7 @@ func createURLRow() map[string]interface{} {
 			paneljson = strings.Replace(paneljson, "$URL$", p, -1)
 			panel = make(map[string]interface{})
 			json.Unmarshal([]byte(paneljson), &panel)
-			panel["id"] = rand.Intn(1000)
+			panel["id"] = rand.Intn(10000)
 			panels = append(panels, panel)
 
 			var buff bytes.Buffer
@@ -447,27 +447,27 @@ func createAllAlertsRow() map[string]interface{} {
 	var panels []map[string]interface{}
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(OKAlertPanel), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(PausedAlertPanel), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(AlertingPanel), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(NoDateAlertPanel), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(ExecutionErrorAlertPanel), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	row := newRow("Alerts List", 300)
@@ -486,7 +486,7 @@ func createURLAlertRow() map[string]interface{} {
 			paneljson = strings.Replace(paneljson, "$URL$", p, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
-			panel["id"] = rand.Intn(1000)
+			panel["id"] = rand.Intn(10000)
 			panels = append(panels, panel)
 		}
 		row := newRow("URL Alerts", 230)
@@ -515,7 +515,7 @@ func createPortsRow() map[string]interface{} {
 			paneljson = strings.Replace(paneljson, "$PORT$", port, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
-			panel["id"] = rand.Intn(1000)
+			panel["id"] = rand.Intn(10000)
 			panels = append(panels, panel)
 
 			var buff bytes.Buffer
@@ -549,7 +549,7 @@ func createPortsAlertRow() map[string]interface{} {
 			paneljson = strings.Replace(paneljson, "$PORT$", port, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
-			panel["id"] = rand.Intn(1000)
+			panel["id"] = rand.Intn(10000)
 			panels = append(panels, panel)
 		}
 		row := newRow("Ports Alert", 230)
@@ -569,7 +569,7 @@ func createProcstatRow() map[string]interface{} {
 			paneljson = strings.Replace(paneljson, "$PROCESS$", p, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
-			panel["id"] = rand.Intn(1000)
+			panel["id"] = rand.Intn(10000)
 			panels = append(panels, panel)
 
 			var buff bytes.Buffer
@@ -596,7 +596,7 @@ func createProcstatAlertRow() map[string]interface{} {
 			paneljson = strings.Replace(paneljson, "$PROCESS$", p, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
-			panel["id"] = rand.Intn(1000)
+			panel["id"] = rand.Intn(10000)
 			panels = append(panels, panel)
 		}
 		row := newRow("Process Alerts", 230)
@@ -612,21 +612,21 @@ func createDiskProcessSwapRow() map[string]interface{} {
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	paneljson = ProcessPanel
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	paneljson = Swap
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	row := newRow("Disk, Process & Swap Monitoring", 230)
@@ -641,7 +641,7 @@ func createDiskInodeAlertRow() map[string]interface{} {
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	paneljson = INodeAlertPanel
@@ -649,7 +649,7 @@ func createDiskInodeAlertRow() map[string]interface{} {
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	row := newRow("Disk & Inode Alerts", 230)
@@ -663,14 +663,14 @@ func createCPURAMRow() map[string]interface{} {
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	paneljson = RAMPanel
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	row := newRow("CPU & RAM Monitoring", 230)
@@ -685,7 +685,7 @@ func createCPURAMAlertRow() map[string]interface{} {
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	paneljson = RAMAlertPanel
@@ -693,7 +693,7 @@ func createCPURAMAlertRow() map[string]interface{} {
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	row := newRow("CPU & RAM Alerts", 230)
@@ -707,14 +707,14 @@ func createIPSystemLoadRow() map[string]interface{} {
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	paneljson = SystemLoadPanel
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	panel = make(map[string]interface{})
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	row := newRow("IP Traffic & System load Monitoring", 230)
@@ -729,7 +729,7 @@ func createSystemLoadAlertRow() map[string]interface{} {
 	paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 	var panel map[string]interface{}
 	json.Unmarshal([]byte(paneljson), &panel)
-	panel["id"] = rand.Intn(1000)
+	panel["id"] = rand.Intn(10000)
 	panels = append(panels, panel)
 
 	row := newRow("System load Alerts", 230)
