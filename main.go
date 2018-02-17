@@ -590,7 +590,7 @@ func createProcstatAlertRow() map[string]interface{} {
 		ports := strings.Split(DashboardInfo.Process, ",")
 		var panels []map[string]interface{}
 		for _, p := range ports {
-			var paneljson string = ProcstatPanel
+			var paneljson string = ProcstatAlertPanel
 			paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
 			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
 			paneljson = strings.Replace(paneljson, "$PROCESS$", p, -1)

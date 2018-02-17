@@ -2246,7 +2246,7 @@ const ProcstatPanel = `{
                 {
                     "key":"host",
                     "operator":"=~",
-                    "value":"$HOSTNAME$"
+                    "value":"/^$host$/"
                 },
                 {
                     "condition":"AND",
