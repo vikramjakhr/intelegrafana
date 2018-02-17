@@ -3829,7 +3829,7 @@ const TelegrafInputHttpResponse = `[[inputs.http_response]]
   address = "$URL$"
   response_timeout = "30s"
   method = "GET"
-  # follow_redirects = false`
+  follow_redirects = true`
 
 const TelegrafInputProcstat = `[[inputs.procstat]]
   pattern = "$PROCESS$"
