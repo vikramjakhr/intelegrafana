@@ -788,9 +788,9 @@ func getOSName() string {
 		ExitWithStatus1(err.Error())
 	}
 	platform := strings.Trim(string(output), "\n")
-	if platform == "ubuntu" {
+	if platform == "ubuntu" || strings.Contains(platform, "ubuntu"){
 		return UBUNTU
-	} else if platform == "centos" {
+	} else if platform == "centos" || strings.Contains(platform, "centos") {
 		return CENTOS
 	} else {
 		ExitWithStatus1("Only ubuntu and centos are supported")
