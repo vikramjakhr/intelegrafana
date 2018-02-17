@@ -566,51 +566,38 @@ func installTelegraf(platform string) {
 	fmt.Println(fmt.Sprintf("Installing telegraf for %s", platform))
 	switch platform {
 	case UBUNTU:
-		dist := getDistributionName()
-		c1 := exec.Command("curl", "-sL", "https://repos.influxdata.com/influxdb.key")
-		c2 := exec.Command("sudo", "apt-key", "add", "-")
-		c3 := exec.Command("source", "/etc/lsb-release")
-		c4 := exec.Command("echo", fmt.Sprintf("deb https://repos.influxdata.com/ubuntu %s stable", dist))
-		c5 := exec.Command("sudo", "tee", "/etc/apt/sources.list.d/influxdb.list")
-
-		r, w := io.Pipe()
-		c1.Stdout = w
-		c2.Stdin = r
-
-		var b2, b5 bytes.Buffer
-		c2.Stdout = &b2
-
-		c1.Start()
-		c2.Start()
-		c1.Wait()
-		w.Close()
-		c2.Wait()
-		io.Copy(os.Stdout, &b2)
-		c3.Start()
-		c3.Wait()
-		r1, w1 := io.Pipe()
-		c4.Stdout = w1
-		c5.Stdin = r1
-		c5.Stdout = &b5
-		c4.Start()
-		c5.Start()
-		c4.Wait()
-		w1.Close()
-		c5.Wait()
-		io.Copy(os.Stdout, &b5)
-
-		_, err := exec.Command("sudo", "apt-get", "update").CombinedOutput()
+		_, err := exec.Command("wget", "https://dl.influxdata.com/telegraf/releases/telegraf_1.5.2-1_amd64.deb", "-P", "/tmp").CombinedOutput()
 		if err != nil {
 			os.Stderr.WriteString(err.Error())
 			ExitWithStatus1(err.Error())
 		}
-		_, err = exec.Command("sudo", "apt-get", "install", "telegraf").CombinedOutput()
+		_, err = exec.Command("sudo", "dpkg", "-i", "/tmp/telegraf_1.5.2-1_amd64.deb").CombinedOutput()
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+			ExitWithStatus1(err.Error())
+		}
+		_, err = exec.Command("sudo", "rm", "-f", "/tmp/telegraf_1.5.2-1_amd64.deb").CombinedOutput()
 		if err != nil {
 			os.Stderr.WriteString(err.Error())
 			ExitWithStatus1(err.Error())
 		}
 		break
 	case CENTOS:
+		_, err := exec.Command("wget", "https://dl.influxdata.com/telegraf/releases/telegraf-1.5.2-1.x86_64.rpm", "-P", "/tmp").CombinedOutput()
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+			ExitWithStatus1(err.Error())
+		}
+		_, err = exec.Command("sudo", "yum", "localinstall", "/tmp/telegraf-1.5.2-1.x86_64.rpm").CombinedOutput()
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+			ExitWithStatus1(err.Error())
+		}
+		_, err = exec.Command("sudo", "rm", "-f", "/tmp/telegraf-1.5.2-1.x86_64.rpm").CombinedOutput()
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+			ExitWithStatus1(err.Error())
+		}
 		break
 	}
 }
