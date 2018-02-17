@@ -3821,7 +3821,7 @@ const TelegrafConfig = `[global_tags]
 
 const TelegrafInputNetResponse = `[[inputs.net_response]]
   protocol = "tcp"
-  address = ":$PORT$"
+  address = "$PORT$"
   timeout = "5s"
   read_timeout = "5s"`
 

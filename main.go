@@ -157,7 +157,7 @@ func ports() {
 	input = strings.ToUpper(input)
 	isYesNo := string([]byte(input)[0])
 	if isYesNo == "Y" {
-		fmt.Print("Enter comma(,) separated ports: ")
+		fmt.Print("Enter comma(,) separated ports (e.g. 127.0.0.1:9000): ")
 		input, _ := reader.ReadString('\n')
 		count := 1
 		for ; count < 3; {
@@ -501,9 +501,18 @@ func createPortsRow() map[string]interface{} {
 		ports := strings.Split(DashboardInfo.Ports, ",")
 		var panels []map[string]interface{}
 		for _, p := range ports {
+			var host, port string
+			hp := strings.Split(p, ":")
+			if len(hp) > 1 {
+				host = hp[0]
+				port = hp[1]
+			} else {
+				host = ""
+				port = hp[0]
+			}
 			var paneljson string = PortPanel
 			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
-			paneljson = strings.Replace(paneljson, "$PORT$", p, -1)
+			paneljson = strings.Replace(paneljson, "$PORT$", port, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
 			panel["id"] = rand.Intn(1000)
@@ -512,7 +521,7 @@ func createPortsRow() map[string]interface{} {
 			var buff bytes.Buffer
 			buff.WriteString(AgentConfig)
 			buff.WriteString("\n\n")
-			buff.WriteString(strings.Replace(TelegrafInputNetResponse, "$PORT$", p, -1))
+			buff.WriteString(strings.Replace(TelegrafInputNetResponse, "$PORT$", fmt.Sprintf("%s:%s", host, port), -1))
 			AgentConfig = buff.String()
 		}
 		row := newRow("Ports Monitoring", 63)
@@ -527,10 +536,17 @@ func createPortsAlertRow() map[string]interface{} {
 		ports := strings.Split(DashboardInfo.Ports, ",")
 		var panels []map[string]interface{}
 		for _, p := range ports {
+			var port string
+			hp := strings.Split(p, ":")
+			if len(hp) > 1 {
+				port = hp[1]
+			} else {
+				port = hp[0]
+			}
 			var paneljson string = PortAlertPanel
 			paneljson = strings.Replace(paneljson, "$HOSTNAME$", DashboardInfo.Hostname, -1)
 			paneljson = strings.Replace(paneljson, "$DATASOURCE_NAME$", DashboardInfo.DatasourceName, -1)
-			paneljson = strings.Replace(paneljson, "$PORT$", p, -1)
+			paneljson = strings.Replace(paneljson, "$PORT$", port, -1)
 			var panel map[string]interface{}
 			json.Unmarshal([]byte(paneljson), &panel)
 			panel["id"] = rand.Intn(1000)
@@ -788,7 +804,7 @@ func getOSName() string {
 		ExitWithStatus1(err.Error())
 	}
 	platform := strings.Trim(string(output), "\n")
-	if platform == "ubuntu" || strings.Contains(platform, "ubuntu"){
+	if platform == "ubuntu" || strings.Contains(platform, "ubuntu") {
 		return UBUNTU
 	} else if platform == "centos" || strings.Contains(platform, "centos") {
 		return CENTOS
@@ -840,7 +856,7 @@ func installTelegraf(platform string) {
 				fmt.Println("Error while wget telegraf rpm", err)
 				ExitWithStatus1(err.Error())
 			}
-			_, err = exec.Command("sudo", "yum", "localinstall", "/tmp/telegraf-1.5.2-1.x86_64.rpm","-y").CombinedOutput()
+			_, err = exec.Command("sudo", "yum", "localinstall", "/tmp/telegraf-1.5.2-1.x86_64.rpm", "-y").CombinedOutput()
 			if err != nil {
 				fmt.Println("Error while localinstall telegraf rpm", err)
 				ExitWithStatus1(err.Error())
