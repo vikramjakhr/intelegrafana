@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"io"
 	"net/http"
+	"os/exec"
 )
 
 type CliArgs struct {
@@ -38,12 +39,13 @@ var AgentConfig string
 func main() {
 	fmt.Println("Starting intelegrafana.")
 	//parseFlags()
-	parseInputs()
+	/*parseInputs()
 	initAgentConfig()
 	createDashboard()
 	fmt.Println(*DashboardInfo)
 	fmt.Println("=============================")
-	fmt.Println(AgentConfig)
+	fmt.Println(AgentConfig)*/
+	installTelegraf(getOSName())
 	fmt.Println("Finished execution. Exiting intelegrafana now...")
 	fmt.Println("Bye!!!")
 }
@@ -298,7 +300,7 @@ func createDatasource() {
 }
 
 func ExitWithStatus1(msg string) {
-	fmt.Printf(msg)
+	fmt.Println(msg)
 	fmt.Println("Exiting now...")
 	fmt.Println("Bye!!!")
 	os.Exit(1)
@@ -527,4 +529,77 @@ func setParams(req *http.Request, params map[string]string) url.Values {
 		}
 	}
 	return query
+}
+
+const (
+	UBUNTU = "UBUNTU"
+	CENTOS = "CENTOS"
+)
+
+func getOSName() string {
+	output, err := exec.Command("awk", "-F=", "/^ID=/{print $2}", "/etc/os-release").CombinedOutput()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		ExitWithStatus1(err.Error())
+	}
+	platform := strings.Trim(string(output), "\n")
+	if platform == "ubuntu" {
+		return UBUNTU
+	} else if platform == "centos" {
+		return CENTOS
+	} else {
+		ExitWithStatus1("Only ubuntu and centos are supported")
+	}
+	return ""
+}
+
+func getDistributionName() string {
+	output, err := exec.Command("awk", "-F=", "/^DISTRIB_CODENAME=/{print $2}", "/etc/lsb-release").CombinedOutput()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		ExitWithStatus1(err.Error())
+	}
+	return strings.Trim(string(output), "\n")
+}
+
+func installTelegraf(platform string) {
+	fmt.Println(fmt.Sprintf("Installing telegraf for %s", platform))
+	switch platform {
+	case UBUNTU:
+		dist := getDistributionName()
+		c1 := exec.Command("curl", "-sL", "https://repos.influxdata.com/influxdb.key")
+		c2 := exec.Command("sudo", "apt-key", "add", "-")
+		c3 := exec.Command("source", "/etc/lsb-release")
+		c4 := exec.Command("echo", fmt.Sprintf("deb https://repos.influxdata.com/ubuntu %s stable", dist))
+		c5 := exec.Command("sudo", "tee", "/etc/apt/sources.list.d/influxdb.list")
+
+		r, w := io.Pipe()
+		c1.Stdout = w
+		c2.Stdin = r
+
+		var b2, b5 bytes.Buffer
+		c2.Stdout = &b2
+
+		c1.Start()
+		c2.Start()
+		c1.Wait()
+		w.Close()
+		c2.Wait()
+		io.Copy(os.Stdout, &b2)
+		c3.Start()
+		c3.Wait()
+		r1, w1 := io.Pipe()
+		c4.Stdout = w1
+		c5.Stdin = r1
+		c5.Stdout = &b5
+		c4.Start()
+		c5.Start()
+		c4.Wait()
+		w1.Close()
+		c5.Wait()
+		io.Copy(os.Stdout, &b5)
+		break
+	case CENTOS:
+		break
+	}
 }
