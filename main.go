@@ -598,6 +598,17 @@ func installTelegraf(platform string) {
 		w1.Close()
 		c5.Wait()
 		io.Copy(os.Stdout, &b5)
+
+		_, err := exec.Command("sudo", "apt-get", "update").CombinedOutput()
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+			ExitWithStatus1(err.Error())
+		}
+		_, err = exec.Command("sudo", "apt-get", "install", "telegraf").CombinedOutput()
+		if err != nil {
+			os.Stderr.WriteString(err.Error())
+			ExitWithStatus1(err.Error())
+		}
 		break
 	case CENTOS:
 		break
