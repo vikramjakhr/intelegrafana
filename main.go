@@ -7,6 +7,11 @@ import (
 	"strings"
 	"bufio"
 	"encoding/json"
+	"bytes"
+	"io/ioutil"
+	"net/url"
+	"io"
+	"net/http"
 )
 
 type CliArgs struct {
@@ -232,8 +237,71 @@ func createDashboard() {
 	}
 	json.Unmarshal([]byte(djson), &dashboard)
 	dashboard["rows"] = rows
-	byts, _ := json.MarshalIndent(dashboard, "", "   ")
+	byts, err := json.MarshalIndent(dashboard, "", "   ")
+	if err != nil {
+		fmt.Println("Error occurred while parsing dashboard json.")
+		fmt.Println(err)
+		ExitWithStatus1("Json parsing error")
+	}
 	fmt.Println(string(byts))
+	// creating datasource
+	createDatasource()
+	// creating dashboard
+	statusCode, resp, err := httpPost(fmt.Sprintf("%s/api/dashboards/db", *Args.GrafanaURL),
+		authHeader(*Args.ApiKey), nil, bytes.NewReader(byts))
+	if err != nil {
+		fmt.Println("Some error occurred while crating dashboard:", err)
+		ExitWithStatus1("Error creating dashboard.")
+	}
+	m := make(map[string]interface{})
+	json.Unmarshal(resp, &m)
+	if statusCode == http.StatusOK && m["status"] == "success" {
+		fmt.Printf("Dashboard with name %s created successfully.", DashboardInfo.DatasourceName)
+	} else if statusCode == http.StatusPreconditionFailed {
+		fmt.Printf("Dashboard with name %s already exists.", DashboardInfo.DatasourceName)
+	} else {
+		ExitWithStatus1(fmt.Sprintf("Invalid status code found: %d.", statusCode))
+	}
+}
+
+type GrafanaDatasource struct {
+	OrgId    int `json:"orgId"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`
+	Access   string `json:"access"`
+	Url      string `json:"url"`
+	Database string `json:"database"`
+}
+
+func createDatasource() {
+	ds := &GrafanaDatasource{}
+	byts, err := json.Marshal(ds)
+	if err != nil {
+		ExitWithStatus1(fmt.Sprintf("Some error occured while creating grafana datasource."))
+	}
+	statusCode, resp, err := httpPost(fmt.Sprintf("%s/api/datasources", *Args.GrafanaURL),
+		authHeader(*Args.ApiKey), nil, bytes.NewReader(byts))
+	if err != nil {
+		ExitWithStatus1(fmt.Sprintf("Some error occured while creating grafana datasource."))
+	}
+	m := make(map[string]interface{})
+	err = json.Unmarshal(resp, &m)
+	if err != nil {
+		ExitWithStatus1(fmt.Sprintf("Some error occured while creating grafana datasource."))
+	}
+	if statusCode == http.StatusOK || statusCode == http.StatusConflict {
+		fmt.Printf("Datasource with name %s created/exists. StatusCode: %s", DashboardInfo.DatasourceName, statusCode)
+	} else {
+		msg := fmt.Sprintf("Some error occurred whie creating datasource with name %s.", DashboardInfo.DatasourceName)
+		ExitWithStatus1(msg)
+	}
+}
+
+func ExitWithStatus1(msg string) {
+	fmt.Printf(msg)
+	fmt.Println("Exiting now...")
+	fmt.Println("Bye!!!")
+	os.Exit(1)
 }
 
 func createURLRow() map[string]interface{} {
@@ -417,4 +485,46 @@ func newRow(rType string) map[string]interface{} {
 		break
 	}
 	return row
+}
+
+func httpPost(url string, headers map[string]string, params map[string]string, body io.Reader) (int, []byte, error) {
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return 0, nil, err
+	}
+	setHeaders(req, headers)
+	query := setParams(req, params)
+	req.URL.RawQuery = query.Encode()
+	fmt.Println("POST Request :" + req.URL.String())
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 0, nil, err
+	}
+	defer resp.Body.Close()
+	read, err := ioutil.ReadAll(resp.Body)
+	return resp.StatusCode, read, err
+}
+
+func authHeader(key string) map[string]string {
+	return map[string]string{"Authorization": fmt.Sprintf("Bearer %s", key)}
+}
+
+func setHeaders(req *http.Request, headers map[string]string) {
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	if headers != nil {
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+	}
+}
+
+func setParams(req *http.Request, params map[string]string) url.Values {
+	query := req.URL.Query()
+	if params != nil {
+		for k, v := range params {
+			query.Set(k, fmt.Sprintf("%v", v))
+		}
+	}
+	return query
 }
