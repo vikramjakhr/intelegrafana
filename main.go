@@ -42,12 +42,10 @@ func main() {
 	fmt.Println("Starting intelegrafana...")
 	parseFlags()
 	parseInputs()
-	fmt.Println("============================")
-	fmt.Println(*DashboardInfo)
-	fmt.Println("============================")
 	installTelegraf(getOSName())
-	createDashboard()
 	initAgentConfig()
+	createDashboard()
+	changeTelegrafConfPermission()
 	replaceTelegrafConfig()
 	restartTelegraf()
 	fmt.Println("Finished execution. Exiting intelegrafana now...")
@@ -346,8 +344,11 @@ func createURLRow() map[string]interface{} {
 			panel["id"] = rand.Intn(1000)
 			panels = append(panels, panel)
 
-			tConf := strings.Replace(TelegrafInputHttpResponse, "$URL$", p, -1)
-			AgentConfig += "\n\n" + tConf
+			var buff bytes.Buffer
+			buff.WriteString(AgentConfig)
+			buff.WriteString("\n\n")
+			buff.WriteString(strings.Replace(TelegrafInputHttpResponse, "$URL$", p, -1))
+			AgentConfig = buff.String()
 		}
 		row := newRow(URL)
 		row["panels"] = panels
@@ -369,8 +370,11 @@ func createPortsRow() map[string]interface{} {
 			panel["id"] = rand.Intn(1000)
 			panels = append(panels, panel)
 
-			tConf := strings.Replace(TelegrafInputNetResponse, "$PORT$", p, -1)
-			AgentConfig += "\n\n" + tConf
+			var buff bytes.Buffer
+			buff.WriteString(AgentConfig)
+			buff.WriteString("\n\n")
+			buff.WriteString(strings.Replace(TelegrafInputNetResponse, "$PORT$", p, -1))
+			AgentConfig = buff.String()
 		}
 		row := newRow(PORTS)
 		row["panels"] = panels
@@ -392,8 +396,11 @@ func createProcstatRow() map[string]interface{} {
 			panel["id"] = rand.Intn(1000)
 			panels = append(panels, panel)
 
-			tConf := strings.Replace(TelegrafInputProcstat, "$PROCESS$", p, -1)
-			AgentConfig += "\n\n" + tConf
+			var buff bytes.Buffer
+			buff.WriteString(AgentConfig)
+			buff.WriteString("\n\n")
+			buff.WriteString(strings.Replace(TelegrafInputProcstat, "$PROCESS$", p, -1))
+			AgentConfig = buff.String()
 		}
 		row := newRow(PROCSTATS)
 		row["panels"] = panels
@@ -652,6 +659,11 @@ func replaceTelegrafBinary() {
 		os.Stderr.WriteString(err.Error())
 		ExitWithStatus1(err.Error())
 	}
+	_, err = exec.Command("sudo", "chmod", "775", "/tmp/telegraf").CombinedOutput()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		ExitWithStatus1(err.Error())
+	}
 	_, err = exec.Command("sudo", "mv", "-f", "/tmp/telegraf", "/usr/bin").CombinedOutput()
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
@@ -659,8 +671,16 @@ func replaceTelegrafBinary() {
 	}
 }
 
+func changeTelegrafConfPermission() {
+	_, err := exec.Command("sudo", "chmod", "777", "/etc/telegraf/telegraf.conf").CombinedOutput()
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		ExitWithStatus1(err.Error())
+	}
+}
+
 func replaceTelegrafConfig() {
-	ioutil.WriteFile("/etc/telegraf/telegraf.conf", []byte(AgentConfig), 0644)
+	ioutil.WriteFile("/etc/telegraf/telegraf.conf", []byte(AgentConfig), 0775)
 }
 
 func restartTelegraf() {
