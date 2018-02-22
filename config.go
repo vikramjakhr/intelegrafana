@@ -2695,7 +2695,7 @@ const RAMAlertPanel = `{
                 [
                     {
                         "params":[
-                            "available"
+                            "available_percent"
                         ],
                         "type":"field"
                     }
