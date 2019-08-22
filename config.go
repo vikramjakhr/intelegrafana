@@ -2789,7 +2789,7 @@ const DiskAlertPanel = `{
         "executionErrorState":"alerting",
         "frequency":"60s",
         "handler":1,
-        "message":"Low disk space",
+        "message":"",
         "name":"Disk Alert",
         "noDataState":"no_data",
         "notifications":[
